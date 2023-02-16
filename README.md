@@ -34,5 +34,5 @@ Testing PostgreSQL 11 to 15 upgrade on Centos 7 using Docker
     records  |    f1    |       f2       |       f3       
     ----------+----------+----------------+----------------
     20000000 | 70019509 | 169984585.6851 | 469972131.3837
-   (1 row)
+    (1 row)
    
