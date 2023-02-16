@@ -1,4 +1,5 @@
-# docker_postgres_upgrade
+# Docker PostgreSQL 11 to 15 upgrade
+
 Testing PostgreSQL 11 to 15 upgrade on Centos 7 using Docker
 
 ## Building Docker image
