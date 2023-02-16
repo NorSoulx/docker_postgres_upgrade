@@ -1,0 +1,47 @@
+# Use the centos 7 base image
+FROM centos:7
+
+# Set the maintainer information
+MAINTAINER "NorSoulx"
+
+RUN yum -y update; yum clean all
+
+# Install the PostgreSQL 11 server
+RUN yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm \
+    && yum -y install postgresql11-server postgresql11 \
+    && yum clean all
+
+# Start the PostgreSQL 11 server
+# Add the database 'mydb'
+# Create table and populate with random data
+RUN mkdir -p /var/lib/pgsql/11/data \
+    && chown postgres: /var/lib/pgsql/11/data \
+    && su - postgres -c "/usr/pgsql-11/bin/initdb /var/lib/pgsql/11/data" \
+    && echo "local all all trust" > /var/lib/pgsql/11/data/pg_hba.conf \
+    && echo "host all all 127.0.0.1/32 trust" >> /var/lib/pgsql/11/data/pg_hba.conf \
+    && echo "host all all ::1/118 trust" >> /var/lib/pgsql/11/data/pg_hba.conf \
+    && su - postgres -c "/usr/pgsql-11/bin/pg_ctl start" \
+    && su - postgres -c "/usr/pgsql-11/bin/createdb mydb" \
+    && su - postgres -c "/usr/pgsql-11/bin/psql mydb -c \"CREATE TABLE large_test (f1 bigint, f2 decimal(19,4), f3 decimal(19,4));\"" \
+    && su - postgres -c "/usr/pgsql-11/bin/psql mydb -c \"INSERT INTO large_test (f1, f2, f3) SELECT round(random()*7), random()*17, random()*47 FROM generate_series(1, 20000000) s(i);\"" \
+    && su - postgres -c "/usr/pgsql-11/bin/psql mydb -c \"SELECT version();\" > /tmp/version_pg11.txt" \
+    && su - postgres -c "/usr/pgsql-11/bin/psql mydb -c \"SELECT count(*) records, sum(f1) f1, sum(f2) as f2, sum(f3) as f3 FROM large_test;\" > /tmp/result_pg11.txt" \
+    && su - postgres -c "/usr/pgsql-11/bin/pg_ctl stop"
+
+# Upgrade to PostgreSQL 15 server
+RUN yum -y install yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
+    && yum -y update \
+    && yum -y install postgresql15-server postgresql15 \
+    && yum clean all
+
+# Setup PostgreSQL 15 database
+RUN mkdir -p /var/lib/pgsql/15/data \
+    && chown postgres: /var/lib/pgsql/15/data \
+    && su - postgres -c "/usr/pgsql-15/bin/initdb /var/lib/pgsql/15/data" \
+    && su - postgres -c "/usr/pgsql-15/bin/pg_upgrade --old-datadir=/var/lib/pgsql/11/data --new-datadir=/var/lib/pgsql/15/data --old-bindir=/usr/pgsql-11/bin --new-bindir=/usr/pgsql-15/bin" \
+    && su - postgres -c "/usr/pgsql-15/bin/pg_ctl start" \
+    && su - postgres -c "/usr/pgsql-15/bin/psql mydb -c \"SELECT version();\" > /tmp/version_pg15.txt" \
+    && su - postgres -c "/usr/pgsql-15/bin/psql mydb -c \"SELECT count(*) records, sum(f1) f1, sum(f2) as f2, sum(f3) as f3 FROM large_test;\" > /tmp/result_pg15.txt" \
+    && su - postgres -c "/usr/pgsql-15/bin/pg_ctl stop"
+
+CMD ["/usr/sbin/init"]
