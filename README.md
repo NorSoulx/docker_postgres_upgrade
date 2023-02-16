@@ -3,7 +3,7 @@ Testing PostgreSQL 11 to 15 upgrade on Centos 7 using Docker
 
 ## Building Docker image
 
-    ./pg11_build_dockerfile.sh 
+    bash ./pg11_build_dockerfile.sh 
 
 ## Result
 
