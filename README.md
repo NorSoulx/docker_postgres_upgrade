@@ -6,11 +6,15 @@ Testing PostgreSQL 12 to 16 upgrade on Centos 8 Stream using Docker
 
     bash ./pg12_build_dockerfile.sh 
 
+
+## Result
+
     sh-4.4# ls -l /tmp
     -rw-r--r-- 1 root root 176 Feb  8 21:13 result_pg12.txt
     -rw-r--r-- 1 root root 176 Feb  8 21:13 result_pg16.txt
     -rw-r--r-- 1 root root 341 Feb  8 21:13 version_pg12.txt
     -rw-r--r-- 1 root root 326 Feb  8 21:13 version_pg16.txt
+
 
     sh-4.4# cat version_pg1*
                                                    version                                                    
@@ -23,7 +27,6 @@ Testing PostgreSQL 12 to 16 upgrade on Centos 8 Stream using Docker
     PostgreSQL 16.2 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Red Hat 8.5.0-20), 64-bit
     (1 row)
 
-## Result
 
     sh-4.4# cat result_pg1*
      records  |    f1    |       f2       |       f3       
