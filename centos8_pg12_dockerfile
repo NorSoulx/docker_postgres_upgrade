@@ -1,0 +1,49 @@
+# Use the centos 8 base image
+FROM quay.io/centos/centos:stream8
+
+# Set the maintainer information
+MAINTAINER "NorSoulx"
+
+RUN dnf -y update; dnf clean all
+
+# Install PostgreSQL 12 server
+RUN dnf module -y install postgresql:12 && dnf clean all
+
+RUN dnf install -y glibc-locale-source glibc-langpack-en \
+    && localedef -i en_US -f UTF-8 en_US.UTF-8
+
+# Start the PostgreSQL 12 server
+# Add the database 'mydb'
+# Create table and populate with random data
+RUN mkdir -p /var/lib/pgsql/data \
+    && chown postgres: /var/lib/pgsql/data \
+    && su - postgres -c "/usr/bin/initdb /var/lib/pgsql/data" \
+    && echo "local all all trust" > /var/lib/pgsql/data/pg_hba.conf \
+    && echo "host all all 127.0.0.1/32 trust" >> /var/lib/pgsql/data/pg_hba.conf \
+    && echo "host all all ::1/128 trust" >> /var/lib/pgsql/data/pg_hba.conf \
+    && su - postgres -c "/usr/bin/pg_ctl start" \
+    && su - postgres -c "/usr/bin/createdb mydb" \
+    && su - postgres -c "/usr/bin/psql mydb -c \"CREATE TABLE large_test (f1 bigint, f2 decimal(19,4), f3 decimal(19,4));\"" \
+    && su - postgres -c "/usr/bin/psql mydb -c \"INSERT INTO large_test (f1, f2, f3) SELECT round(random()*7), random()*17, random()*47 FROM generate_series(1, 20000000) s(i);\"" \ 
+    && su - postgres -c "/usr/bin/psql mydb -c \"SELECT version();\" " > /tmp/version_pg12.txt \
+    && su - postgres -c "/usr/bin/psql mydb -c \"SELECT count(*) records, sum(f1) f1, sum(f2) as f2, sum(f3) as f3 FROM large_test;\" " > /tmp/result_pg12.txt \
+    && su - postgres -c "/usr/bin/pg_ctl stop"
+
+# Upgrade to PostgreSQL 16 server
+RUN dnf -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm \
+    && dnf -y module disable postgresql \
+    && dnf install -y postgresql16-server postgresql16-contrib
+
+# Setup PostgreSQL 16 database
+RUN mkdir -p /var/lib/pgsql/16/data \
+    && chown postgres: /var/lib/pgsql/16/data \
+    && su - postgres -c "/usr/pgsql-16/bin/initdb /var/lib/pgsql/16/data" \
+    && su - postgres -c "/usr/pgsql-16/bin/pg_upgrade --old-datadir=/var/lib/pgsql/data --new-datadir=/var/lib/pgsql/16/data --old-bindir=/usr/bin --new-bindir=/usr/pgsql-16/bin" \
+    && su - postgres -c "/usr/pgsql-16/bin/pg_ctl start" \
+    && su - postgres -c "/usr/pgsql-16/bin/psql mydb -c \"SELECT version();\" " > /tmp/version_pg16.txt \
+    && su - postgres -c "/usr/pgsql-16/bin/psql mydb -c \"SELECT count(*) records, sum(f1) f1, sum(f2) as f2, sum(f3) as f3 FROM large_test;\" " > /tmp/result_pg16.txt \
+    && su - postgres -c "/usr/pgsql-16/bin/pg_ctl stop"
+
+# Initialize the database and enable automatic start
+CMD ["/usr/sbin/init"]
+
