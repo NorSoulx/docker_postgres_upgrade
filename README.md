@@ -1,6 +1,6 @@
-# Docker PostgreSQL 1x to 1x upgrade
+# Docker PostgreSQL 12 to 16 upgrade
 
-# Testing PostgreSQL 12 to 16 upgrade on Centos 8 Stream using Docker
+Testing PostgreSQL 12 to 16 upgrade on Centos 8 Stream using Docker
 
 ## Building Docker image for PostgreSQL 12 to 16 upgrade using Centos 8 Stream
 
@@ -23,6 +23,8 @@
     PostgreSQL 16.2 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 8.5.0 20210514 (Red Hat 8.5.0-20), 64-bit
     (1 row)
 
+## Result
+
     sh-4.4# cat result_pg1*
      records  |    f1    |       f2       |       f3       
     ----------+----------+----------------+----------------
@@ -34,7 +36,9 @@
      20000000 | 69984702 | 170042491.6762 | 469900687.4476
     (1 row)
 
-# Testing PostgreSQL 11 to 15 upgrade on Centos 7 using Docker
+# Docker PostgreSQL 11 to 15 upgrade
+
+Testing PostgreSQL 11 to 15 upgrade on Centos 7 using Docker
 
 ## Building Docker image for PostgreSQL 11 to 15 upgrade using Centos 7
 
